@@ -51,7 +51,6 @@ public class ForecastFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_refresh:
-                Log.i(LOG_TAG, "item::::::");
                 new FetchWeatherTask().execute("94043");
                 return true;
             default:
@@ -160,10 +159,20 @@ public class ForecastFragment extends Fragment {
         return resultStrs;
     }
 
-    public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected void onPostExecute(String[] result) {
+            if (result != null) {
+                mForecastAdapter.clear();
+                for (String day: result){
+                    mForecastAdapter.add(day);
+                }
+            }
+        }
+
+        @Override
+        protected String[] doInBackground(String... params) {
 
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
@@ -224,7 +233,6 @@ public class ForecastFragment extends Fragment {
                 }
                 forecastJsonStr = buffer.toString();
 
-                Log.e(LOG_TAG, forecastJsonStr);
 
             } catch (IOException e) {
                 Log.e("PlaceholderFragment", "Error ", e);
@@ -243,7 +251,12 @@ public class ForecastFragment extends Fragment {
                     }
                 }
             }
-            return null;
+            try {
+                return getWeatherDataFromJson(forecastJsonStr, numDays);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
     }
 }
